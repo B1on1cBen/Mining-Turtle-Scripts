@@ -24,11 +24,13 @@ function goToNewRow(x)
     turtle.turnLeft()
     turtle.dig()
     turtle.forward()
+    turtle.digUp()
     turtle.turnLeft()
   else
     turtle.turnRight()
     turtle.dig()
     turtle.forward()
+    turtle.digUp()
     turtle.turnRight()
   end
 
