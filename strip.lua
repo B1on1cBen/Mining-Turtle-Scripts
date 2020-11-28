@@ -44,6 +44,45 @@ function go()
   end
 end
 
+function GoHome()
+  print("Going home.")
+end
+
+function Refuel()
+  print("Refueling. Fuel: " .. turtle.getFuelLevel())
+end
+
+function getDisplacement()
+  location = vector.new(gps.locate(5))
+  print("Location: " .. location.x .. ", " .. location.y .. ", " .. location.z)
+  
+  displacement = home - location
+  print("Displacement: " .. displacement.x .. ", " .. displacement.y .. ", " .. displacement.z .. "\n")
+
+  return displacement
+end
+
+function checkFuel()
+  print("Fuel: " .. turtle.getFuelLevel())
+  -- Get displacement from home
+  -- if displacement is greater than or equal to fuel, go home and refuel
+
+  displacement = getDisplacement()
+  displacementTotal = math.abs(displacement.x) + 
+                      math.abs(displacement.y) + 
+                      math.abs(displacement.z)
+  print("Blocks away from home: " .. displacementTotal)
+
+  homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
+  print("Cost to travel home out of remaining fuel: " .. homeTravelCostPercent)
+
+  if homeTravelCostPercent >= 0.9 then
+    print("Fuel low. Must refuel.\n")
+    GoHome()
+    Refuel()
+  end
+end
+
 -- STARTING POINT:
 io.write("Size X: ")
 sizeX = tonumber(io.read())
@@ -51,9 +90,22 @@ sizeX = tonumber(io.read())
 io.write("Size Z: ")
 sizeZ = tonumber(io.read()) - 1
 
-print("Fuel: " .. turtle.getFuelLevel())
+home = vector.new(gps.locate(5))
+print("Home: " .. home.x .. ", " .. home.y .. ", " .. home.z .. "\n")
+
+turtle.forward()
+turtle.forward()
+turtle.forward()
+turtle.turnRight()
+turtle.forward()
+turtle.forward()
+turtle.forward()
+turtle.up()
+
+checkFuel()
 
 turtle.dig()
 turtle.forward()
 turtle.digUp()
-go()
+
+--go()
