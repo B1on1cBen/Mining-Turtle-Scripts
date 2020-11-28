@@ -70,19 +70,35 @@ function GoHome()
 
   -- Correct Positive Z Displacement
   setRotation(0) -- North
+  while displacement.z > 0 do
+    turtle.forward()
+    displacement.z = displacement.z - 1
+    print("Displacement Z: " .. displacement.z)
+  end
+
+  -- Correct Negative Z Displacement
+  setRotation(2) -- South
   while displacement.z < 0 do
     turtle.forward()
     displacement.z = displacement.z + 1
     print("Displacement Z: " .. displacement.z)
   end
 
-  -- Correct Posi Z Displacement
-  setRotation(2) -- South
-  while displacement.z > 0 do
-    turtle.forward()
-    displacement.z = displacement.z - 1
-    print("Displacement Z: " .. displacement.z)
+  -- Correct Positive Y Displacement
+  while displacement.y > 0 do
+    turtle.down()
+    displacement.y = displacement.y - 1
+    print("Displacement Y: " .. displacement.y)
   end
+
+  -- Correct Negative Y Displacement
+  while displacement.y < 0 do
+    turtle.up()
+    displacement.y = displacement.y + 1
+    print("Displacement Y: " .. displacement.y)
+  end
+
+  setRotation(0)
 end
 
 function Refuel()
@@ -121,7 +137,7 @@ function checkFuel()
 end
 
 function setRotation(rotation)
-  print("Setting rotation to " .. rotation)
+  --print("Setting rotation to " .. rotation)
   --print("Current rotation: " .. direction)
   --print("Desired rotation: " .. rotation)
   while direction ~= rotation do
@@ -129,7 +145,7 @@ function setRotation(rotation)
       turtle.turnRight()
   end
 
-  print("Finished rotating. Direction: " .. direction .. "\n")
+  --print("Finished rotating. Direction: " .. direction .. "\n")
 end
 
 -- STARTING POINT:
@@ -151,13 +167,5 @@ home = vector.new(gps.locate(5))
 print("Home: " .. home.x .. ", " .. home.y .. ", " .. home.z .. "\n")
 print("Fuel: " .. turtle.getFuelLevel())
 
--- turtle.forward()
--- turtle.forward()
--- turtle.forward()
--- setRotation(1)
--- turtle.forward()
--- turtle.forward()
--- turtle.forward()
--- checkFuel()
-
 go()
+checkFuel()
