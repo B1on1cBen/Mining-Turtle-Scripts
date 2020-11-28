@@ -53,15 +53,40 @@ function GoHome()
   displacement = getDisplacement()
 
   -- Correct Positive X Displacement
-  setRotation(2) -- west
+  setRotation(3) -- West
   while displacement.x > 0 do
-      turtle.forward()
-      displacement.x = displacement.x - 1
+    turtle.forward()
+    displacement.x = displacement.x - 1
+    print("Displacement X: " .. displacement.x)
+  end
+
+  -- Correct Negative X Displacement
+  setRotation(1) -- East
+  while displacement.x < 0 do
+    turtle.forward()
+    displacement.x = displacement.x + 1
+    print("Displacement X: " .. displacement.x)
+  end
+
+  -- Correct Positive Z Displacement
+  setRotation(0) -- North
+  while displacement.z < 0 do
+    turtle.forward()
+    displacement.z = displacement.z + 1
+    print("Displacement Z: " .. displacement.z)
+  end
+
+  -- Correct Negative Z Displacement
+  setRotation(2) -- South
+  while displacement.z > 0 do
+    turtle.forward()
+    displacement.z = displacement.z - 1
+    print("Displacement Z: " .. displacement.z)
   end
 end
 
 function Refuel()
-  print("Refueling. Fuel: " .. turtle.getFuelLevel())
+  --print("Refueling. Fuel: " .. turtle.getFuelLevel())
 end
 
 function getDisplacement()
@@ -96,33 +121,17 @@ function checkFuel()
 end
 
 function setRotation(rotation)
-  --print("Setting rotation to " .. rotation)
+  print("Setting rotation to " .. rotation)
   --print("Current rotation: " .. direction)
   --print("Desired rotation: " .. rotation)
-  rotateSteps = 0
+  rotateSteps = math.abs(rotation - direction)
+  direction = rotation
 
-  if direction == 0 and rotation == 1 then rotateSteps = 1 end
-  if direction == 0 and rotation == 2 then rotateSteps = 3 end
-  if direction == 0 and rotation == 3 then rotateSteps = 2 end
-
-  if direction == 1 and rotation == 0 then rotateSteps = 3 end
-  if direction == 1 and rotation == 2 then rotateSteps = 2 end
-  if direction == 1 and rotation == 3 then rotateSteps = 1 end
-
-  if direction == 2 and rotation == 0 then rotateSteps = 1 end
-  if direction == 2 and rotation == 1 then rotateSteps = 2 end
-  if direction == 2 and rotation == 3 then rotateSteps = 3 end
-
-  if direction == 3 and rotation == 0 then rotateSteps = 2 end
-  if direction == 3 and rotation == 1 then rotateSteps = 3 end
-  if direction == 3 and rotation == 2 then rotateSteps = 1 end
-
-  while rotateSteps > 0 do
+  for i = 1, rotateSteps do
       turtle.turnRight()
-      direction = (direction + 1) % 4
-      rotateSteps = rotateSteps - 1
-      --print("Rotated right. Current rotation: " .. direction)
   end
+
+  print("Finished rotating. Direction: " .. direction .. "\n")
 end
 
 -- STARTING POINT:
@@ -135,8 +144,8 @@ sizeZ = tonumber(io.read()) - 1
 --[[
   North - 0
   East - 1
-  West - 2
-  South - 3
+  South - 2
+  West - 3
 ]]
 direction = 0;
 
@@ -151,8 +160,6 @@ setRotation(1)
 turtle.forward()
 turtle.forward()
 turtle.forward()
-turtle.up()
-
 checkFuel()
 
 --go()
