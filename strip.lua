@@ -40,12 +40,28 @@ function Go()
   for x = 1, sizeX do
     for z = 1, sizeZ do
       mineFront2by1(z)
-      CheckFuel()
+      if CheckFuel() == false then
+        CheckShit()
+      end
     end
     
     if x < sizeX then
       goToNewRow(x)
     end
+  end
+end
+
+function DigAndMove()
+  local startLocation = vector.new(gps.locate(5))
+  turtle.dig()
+  turtle.forward()
+  local endLocation = vector.new(gps.locate(5))
+  while startLocation.x == endLocation.x and  
+        startLocation.y == endLocation.y and
+        startLocation.z == endLocation.z do
+    turtle.dig()
+    turtle.forward()
+    endLocation = vector.new(gps.locate(5))
   end
 end
 
@@ -110,27 +126,33 @@ function DumpShit()
 end
 
 function GetDisplacement()
-  location = vector.new(gps.locate(5))
+  local location = vector.new(gps.locate(5))
   print("Location: " .. location.x .. ", " .. location.y .. ", " .. location.z)
   
-  displacement = home - location
+  local displacement = home - location
   print("Displacement: " .. displacement.x .. ", " .. displacement.y .. ", " .. displacement.z .. "\n")
 
   return displacement
 end
 
 function CheckFuel()
-  displacement = GetDisplacement()
-  displacementTotal = math.abs(displacement.x) + 
-                      math.abs(displacement.y) + 
-                      math.abs(displacement.z)
+  local displacement = GetDisplacement()
+  local displacementTotal = math.abs(displacement.x) + 
+                            math.abs(displacement.y) + 
+                            math.abs(displacement.z)
 
-  homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
+  local homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
 
   if homeTravelCostPercent >= 0.90 then
     print("Fuel low. Must refuel.\n")
     GoHome()
+    return true
   end
+  return false
+end
+
+function CheckShit()
+
 end
 
 function SetRotation(rotation)
@@ -165,5 +187,10 @@ print("Home: " .. home.x .. ", " .. home.y .. ", " .. home.z .. "\n")
 print("Fuel: " .. turtle.getFuelLevel())
 
 --GoHome()
-
 --Go()
+
+DigAndMove()
+DigAndMove()
+DigAndMove()
+DigAndMove()
+DigAndMove()
