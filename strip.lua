@@ -1,49 +1,42 @@
-function mineFront(z)
-  DigAndMove()
-  -- if z % 2 == 0 then
-  --   turtle.digDown()
-  --   turtle.down()
-  -- else
-  --   turtle.digUp()
-  --   turtle.up()
-  -- end
-end
-
 function goToNewRow(x)
   if x % 2 == 0 then
     SetRotation(1)
     DigAndMove()
-    --turtle.digUp()
     SetRotation(0)
   else
     SetRotation(1)
     DigAndMove()
-    --turtle.digUp()
     SetRotation(2)
   end
-
-  -- if sizeZ % 2 ~= 0 then 
-  --   turtle.digDown()
-  --   turtle.down()
-  -- end
 end
 
 function Mine()
-  DigAndMove()
-  for x = 1, sizeX do
-    for z = 1, sizeZ do
-      DigAndMove()
-      CheckStatus()
-    end
-    
-    if x < sizeX then
-      goToNewRow(x)
-    end
-  end
+  for y = 1, sizeY do
+    SetRotation(0)
+    DigAndMove()
 
-  Go(home)
-  Refuel()
-  DumpShit()
+    local yDerp = y - 1
+    for i = 1, yDerp do
+      turtle.digDown()
+      turtle.down()
+    end
+
+    for x = 1, sizeX do
+      for z = 1, sizeZ do
+        DigAndMove()
+        Info()
+        CheckStatus()
+      end
+      
+      if x < sizeX then
+        goToNewRow(x)
+      end
+    end
+
+    Go(home)
+    Refuel()
+    DumpShit()
+  end
 end
 
 function CheckStatus()
@@ -79,9 +72,23 @@ function Resume(resumePoint, resumeDirection)
 end
 
 function Go(destination)
-  print("Going to " .. destination.x .. ", " .. destination.y .. ", " .. destination.z)
   displacement = GetDisplacement(destination)
-  
+  isHome = (destination.x == home.x and destination.y == home.y and destination.z == home.z)
+
+  if(isHome == false) then
+    SetRotation(0) -- North
+    while displacement.z > 0 do
+      turtle.forward()
+      displacement.z = displacement.z - 1
+    end
+
+    SetRotation(2) -- South
+    while displacement.z < 0 do
+      turtle.forward()
+      displacement.z = displacement.z + 1
+    end
+  end
+
   -- Up
   while displacement.y > 0 do
     turtle.up()
@@ -106,30 +113,29 @@ function Go(destination)
     displacement.x = displacement.x + 1
   end
 
-  SetRotation(0) -- North
-  while displacement.z > 0 do
-    turtle.forward()
-    displacement.z = displacement.z - 1
-  end
+  if(isHome == true) then
+    SetRotation(0) -- North
+    while displacement.z > 0 do
+      turtle.forward()
+      displacement.z = displacement.z - 1
+    end
 
-  SetRotation(2) -- South
-  while displacement.z < 0 do
-    turtle.forward()
-    displacement.z = displacement.z + 1
+    SetRotation(2) -- South
+    while displacement.z < 0 do
+      turtle.forward()
+      displacement.z = displacement.z + 1
+    end
   end
 end
 
 function Refuel()
-  print("Refueling. Fuel: " .. turtle.getFuelLevel())
   SetRotation(3)
   turtle.suck()
   turtle.select(1)
   turtle.refuel()
-  print("Refueling Complete. Fuel: " .. turtle.getFuelLevel())
 end
 
 function DumpShit()
-  print("Dumping shit...")
   SetRotation(2)
   local search = 0
 	for search = 16, 1, -1 do
@@ -140,11 +146,7 @@ end
 
 function GetDisplacement(destination)
   local turtlePos = vector.new(gps.locate(5))
-  print("Location: " .. turtlePos.x .. ", " .. turtlePos.y .. ", " .. turtlePos.z)
-  
   local displacement = destination - turtlePos
-  print("Displacement: " .. displacement.x .. ", " .. displacement.y .. ", " .. displacement.z .. "\n")
-
   return displacement
 end
 
@@ -157,27 +159,28 @@ function CheckFuel()
   local homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
 
   if homeTravelCostPercent >= 0.90 then
-    print("Fuel low. Must refuel.\n")
     return true
   end
   return false
 end
 
 function CheckShit()
-  fullSlots = 0
+  local fullSlots = 0
 	local search = 0
-	for search = 16, 1, -1 do
-		if turtle.getItemCount(search) > 0 then
-			if tossShit == "yes" or tossShit == "y" or tossShit == "Y" then
-				if turtle.getItemDetail().name == "minecraft:cobblestone" or
-					 turtle.getItemDetail().name == "minecraft:stone" or
-					 turtle.getItemDetail().name == "minecraft:dirt" or
-					 turtle.getItemDetail().name == "minecraft:gravel" or
-					 turtle.getItemDetail().name == "chisel:marble2" or
-					 turtle.getItemDetail().name == "chisel:limestone2" or
-					 turtle.getItemDetail().name == "minecraft:netherrack" or
-					 turtle.getItemDetail().name == "natura:nether_tainted_soil" then
-            turtle.select(search)
+  for search = 16, 1, -1 do
+    turtle.select(search)
+    local itemCount = turtle.getItemCount(search)
+		if itemCount > 0 then
+      if tossShit == "yes" or tossShit == "y" or tossShit == "Y" then
+        local data = turtle.getItemDetail(1)
+				if data.name == "minecraft:cobblestone" or
+					 data.name == "minecraft:stone" or
+					 data.name == "minecraft:dirt" or
+					 data.name == "minecraft:gravel" or
+					 data.name == "chisel:marble2" or
+					 data.name == "chisel:limestone2" or
+					 data.name == "minecraft:netherrack" or
+					 data.name == "natura:nether_tainted_soil" then
             turtle.drop()
 				end
 			end
@@ -195,15 +198,16 @@ function CheckShit()
 end
 
 function SetRotation(rotation)
-  --print("Setting rotation to " .. rotation)
-  --print("Current rotation: " .. direction)
-  --print("Desired rotation: " .. rotation)
   while direction ~= rotation do
       direction = (direction + 1) % 4
       turtle.turnRight()
   end
+end
 
-  --print("Finished rotating. Direction: " .. direction .. "\n")
+function Info()
+  term.clear()
+  term.setCursorPos(1,1)
+  print("Fuel: " .. turtle.getFuelLevel())
 end
 
 -- STARTING POINT:
@@ -226,9 +230,8 @@ tossShit = io.read()
   West - 3
 ]]
 direction = 0;
-
 home = vector.new(gps.locate(5))
-print("Home: " .. home.x .. ", " .. home.y .. ", " .. home.z .. "\n")
-print("Fuel: " .. turtle.getFuelLevel())
 
+Refuel()
+Info()
 Mine()
