@@ -40,7 +40,7 @@ function Mine()
 end
 
 function CheckStatus()
-  if CheckFuel() == true or CheckShit() == true then
+  if IsLowOnFuel() == true or IsFullOfShit() == true then
     local resumePoint = vector.new(gps.locate(5))
     local resumeDirection = direction
     Go(home)
@@ -129,10 +129,12 @@ function Go(destination)
 end
 
 function Refuel()
-  SetRotation(3)
-  turtle.suck()
-  turtle.select(1)
-  turtle.refuel()
+  if turtle.getFuelLevel() < turtle.getFuelLimit() then
+    SetRotation(3)
+    turtle.suck()
+    turtle.select(1)
+    turtle.refuel()
+  end
 end
 
 function DumpShit()
@@ -150,7 +152,7 @@ function GetDisplacement(destination)
   return displacement
 end
 
-function CheckFuel()
+function IsLowOnFuel()
   local displacement = GetDisplacement(home)
   local displacementTotal = math.abs(displacement.x) + 
                             math.abs(displacement.y) + 
@@ -164,36 +166,18 @@ function CheckFuel()
   return false
 end
 
-function CheckShit()
+function IsFullOfShit()
   local fullSlots = 0
-	local search = 0
   for search = 16, 1, -1 do
-    turtle.select(search)
-    local itemCount = turtle.getItemCount(search)
-		if itemCount > 0 then
-      if tossShit == "yes" or tossShit == "y" or tossShit == "Y" then
-        local data = turtle.getItemDetail(1)
-				if data.name == "minecraft:cobblestone" or
-					 data.name == "minecraft:stone" or
-					 data.name == "minecraft:dirt" or
-					 data.name == "minecraft:gravel" or
-					 data.name == "chisel:marble2" or
-					 data.name == "chisel:limestone2" or
-					 data.name == "minecraft:netherrack" or
-					 data.name == "natura:nether_tainted_soil" then
-            turtle.drop()
-				end
-			end
-    end
-    
-    itemCount = turtle.getItemCount(search)
-		if itemCount > 0 then
+		if turtle.getItemCount(search) > 0 then
 			fullSlots = fullSlots + 1
 		end
-	end
+  end
+  
 	if fullSlots == 16 then
 		return true
   end
+  
   return false
 end
 
@@ -207,7 +191,7 @@ end
 function Info()
   term.clear()
   term.setCursorPos(1,1)
-  print("Fuel: " .. turtle.getFuelLevel())
+  print("Fuel: " .. turtle.getFuelLevel() .. "/" .. turtle.getFuelLimit())
 end
 
 -- STARTING POINT:
@@ -220,8 +204,8 @@ sizeZ = tonumber(io.read()) - 1
 io.write("How many layers deep? ")
 sizeY = tonumber(io.read())
 
-io.write("Toss Shit Y/N? ")
-tossShit = io.read()
+-- io.write("Toss Shit Y/N? ")
+-- tossShit = io.read()
 
 --[[
   North - 0
