@@ -1,54 +1,59 @@
-function mineFront2by1(z)
+function mineFront(z)
   DigAndMove()
-
-  if z % 2 == 0 then
-    turtle.digDown()
-    turtle.down()
-  else
-    turtle.digUp()
-    turtle.up()
-  end
+  -- if z % 2 == 0 then
+  --   turtle.digDown()
+  --   turtle.down()
+  -- else
+  --   turtle.digUp()
+  --   turtle.up()
+  -- end
 end
 
 function goToNewRow(x)
   if x % 2 == 0 then
     SetRotation(1)
     DigAndMove()
-    turtle.digUp()
+    --turtle.digUp()
     SetRotation(0)
   else
     SetRotation(1)
     DigAndMove()
-    turtle.digUp()
+    --turtle.digUp()
     SetRotation(2)
   end
 
-  if sizeZ % 2 ~= 0 then 
-    turtle.digDown()
-    turtle.down()
-  end
+  -- if sizeZ % 2 ~= 0 then 
+  --   turtle.digDown()
+  --   turtle.down()
+  -- end
 end
 
 function Mine()
   DigAndMove()
-  turtle.digUp()
-
   for x = 1, sizeX do
     for z = 1, sizeZ do
-      mineFront2by1(z)
-      if CheckFuel() == true or CheckShit() == true then
-        local resumePoint = vector.new(gps.locate(5))
-        local resumeDirection = direction
-        Go(home)
-        Refuel()
-        DumpShit()
-        Resume(resumePoint, resumeDirection)
-      end
+      DigAndMove()
+      CheckStatus()
     end
     
     if x < sizeX then
       goToNewRow(x)
     end
+  end
+
+  Go(home)
+  Refuel()
+  DumpShit()
+end
+
+function CheckStatus()
+  if CheckFuel() == true or CheckShit() == true then
+    local resumePoint = vector.new(gps.locate(5))
+    local resumeDirection = direction
+    Go(home)
+    Refuel()
+    DumpShit()
+    Resume(resumePoint, resumeDirection)
   end
 end
 
@@ -76,6 +81,18 @@ end
 function Go(destination)
   print("Going to " .. destination.x .. ", " .. destination.y .. ", " .. destination.z)
   displacement = GetDisplacement(destination)
+  
+  -- Up
+  while displacement.y > 0 do
+    turtle.up()
+    displacement.y = displacement.y - 1
+  end
+
+  -- Down
+  while displacement.y < 0 do
+    turtle.down()
+    displacement.y = displacement.y + 1
+  end
 
   SetRotation(3) -- West
   while displacement.x > 0 do
@@ -99,16 +116,6 @@ function Go(destination)
   while displacement.z < 0 do
     turtle.forward()
     displacement.z = displacement.z + 1
-  end
-
-  while displacement.y > 0 do
-    turtle.up()
-    displacement.y = displacement.y - 1
-  end
-
-  while displacement.y < 0 do
-    turtle.down()
-    displacement.y = displacement.y + 1
   end
 end
 
@@ -205,6 +212,9 @@ sizeX = tonumber(io.read())
 
 io.write("Size Z: ")
 sizeZ = tonumber(io.read()) - 1
+
+io.write("How many layers deep? ")
+sizeY = tonumber(io.read())
 
 io.write("Toss Shit Y/N? ")
 tossShit = io.read()
