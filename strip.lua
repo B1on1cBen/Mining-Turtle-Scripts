@@ -13,17 +13,17 @@ end
 
 function goToNewRow(x)
   if x % 2 == 0 then
-    setRotation(1)
+    SetRotation(1)
     turtle.dig()
     turtle.forward()
     turtle.digUp()
-    setRotation(0)
+    SetRotation(0)
   else
-    setRotation(1)
+    SetRotation(1)
     turtle.dig()
     turtle.forward()
     turtle.digUp()
-    setRotation(2)
+    SetRotation(2)
   end
 
   if sizeZ % 2 ~= 0 then 
@@ -32,7 +32,7 @@ function goToNewRow(x)
   end
 end
 
-function go()
+function Go()
   turtle.dig()
   turtle.forward()
   turtle.digUp()
@@ -40,6 +40,7 @@ function go()
   for x = 1, sizeX do
     for z = 1, sizeZ do
       mineFront2by1(z)
+      CheckFuel()
     end
     
     if x < sizeX then
@@ -50,62 +51,65 @@ end
 
 function GoHome()
   print("Going home.")
-  displacement = getDisplacement()
+  displacement = GetDisplacement()
 
-  -- Correct Positive X Displacement
-  setRotation(3) -- West
+  SetRotation(3) -- West
   while displacement.x > 0 do
     turtle.forward()
     displacement.x = displacement.x - 1
-    print("Displacement X: " .. displacement.x)
   end
 
-  -- Correct Negative X Displacement
-  setRotation(1) -- East
+  SetRotation(1) -- East
   while displacement.x < 0 do
     turtle.forward()
     displacement.x = displacement.x + 1
-    print("Displacement X: " .. displacement.x)
   end
 
-  -- Correct Positive Z Displacement
-  setRotation(0) -- North
+  SetRotation(0) -- North
   while displacement.z > 0 do
     turtle.forward()
     displacement.z = displacement.z - 1
-    print("Displacement Z: " .. displacement.z)
   end
 
-  -- Correct Negative Z Displacement
-  setRotation(2) -- South
+  SetRotation(2) -- South
   while displacement.z < 0 do
     turtle.forward()
     displacement.z = displacement.z + 1
-    print("Displacement Z: " .. displacement.z)
   end
 
-  -- Correct Positive Y Displacement
   while displacement.y > 0 do
-    turtle.down()
-    displacement.y = displacement.y - 1
-    print("Displacement Y: " .. displacement.y)
-  end
-
-  -- Correct Negative Y Displacement
-  while displacement.y < 0 do
     turtle.up()
-    displacement.y = displacement.y + 1
-    print("Displacement Y: " .. displacement.y)
+    displacement.y = displacement.y - 1
   end
 
-  setRotation(0)
+  while displacement.y < 0 do
+    turtle.down()
+    displacement.y = displacement.y + 1
+  end
+
+  Refuel()
+  DumpShit()
 end
 
 function Refuel()
-  --print("Refueling. Fuel: " .. turtle.getFuelLevel())
+  print("Refueling. Fuel: " .. turtle.getFuelLevel())
+  SetRotation(3)
+  turtle.suck()
+  turtle.select(1)
+  turtle.refuel()
+  print("Refueling Complete. Fuel: " .. turtle.getFuelLevel())
 end
 
-function getDisplacement()
+function DumpShit()
+  print("Dumping shit...")
+  SetRotation(2)
+	for search = 16, 1, -1 do
+		turtle.select(search)
+		turtle.drop()
+	end
+end
+
+function GetDisplacement()
   location = vector.new(gps.locate(5))
   print("Location: " .. location.x .. ", " .. location.y .. ", " .. location.z)
   
@@ -115,28 +119,21 @@ function getDisplacement()
   return displacement
 end
 
-function checkFuel()
-  print("Fuel: " .. turtle.getFuelLevel())
-  -- Get displacement from home
-  -- if displacement is greater than or equal to fuel, go home and refuel
-
-  displacement = getDisplacement()
+function CheckFuel()
+  displacement = GetDisplacement()
   displacementTotal = math.abs(displacement.x) + 
                       math.abs(displacement.y) + 
                       math.abs(displacement.z)
-  print("Blocks away from home: " .. displacementTotal)
 
   homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
-  print("Cost to travel home out of remaining fuel: " .. homeTravelCostPercent)
 
-  --if homeTravelCostPercent >= 0.9 then
+  if homeTravelCostPercent >= 0.90 then
     print("Fuel low. Must refuel.\n")
     GoHome()
-    Refuel()
-  --end
+  end
 end
 
-function setRotation(rotation)
+function SetRotation(rotation)
   --print("Setting rotation to " .. rotation)
   --print("Current rotation: " .. direction)
   --print("Desired rotation: " .. rotation)
@@ -167,5 +164,6 @@ home = vector.new(gps.locate(5))
 print("Home: " .. home.x .. ", " .. home.y .. ", " .. home.z .. "\n")
 print("Fuel: " .. turtle.getFuelLevel())
 
-go()
-checkFuel()
+--GoHome()
+
+--Go()
