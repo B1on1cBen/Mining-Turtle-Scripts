@@ -1,9 +1,5 @@
 -- LOCAL POSITIONING SYSYEM
 
-position = vector.new(0, 0, 0)
-home = vector.new(0, 0, 0)
-rotation = 0
-
 --[[
   North - 0
   East - 1
@@ -32,6 +28,11 @@ function Move(direction)
         end
     end
 
+    if turtle.getFuelLevel() == 0 then
+        Finish("Out of fuel", true)
+        return false
+    end
+
     if direction < 4 then turtle.forward()
     elseif direction == 4 then turtle.up()
     elseif direction == 5 then turtle.down()
@@ -45,8 +46,7 @@ function Move(direction)
     elseif direction == 5 then position.y = position.y - 1
     end
 
-    Info()
-    CheckStatus()
+    return true
 end
 
 function Detect(direction)
@@ -87,18 +87,51 @@ end
 function Info()
     term.clear()
     term.setCursorPos(1,1)
-    print("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000)
+    io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000 .. "\n")
+end
+
+function Finish(reason, stop)
+    if stop == false then
+        Go(home)
+    end
+
+    Rotate(0)
+    io.write("Finished. Reason: " .. reason .. "\n")
 end
 
 function CheckStatus()
-    if(IsLowOnFuel() == true or IsFullOfShit() == true)then
+    Info()
+
+    if IsLowOnFuel() == true or IsFullOfShit() == true then
         local resumePoint = position
         local resumeRotation = rotation
+        io.write("Resuming at position " .. resumePoint.x .. ", " .. resumePoint.y .. ", " .. resumePoint.z .. " and rotation " .. resumeRotation .. "\n")
         Go(home)
-        Refuel()
         DumpShit()
-        Resume(resumePoint, resumeRotation)
+        
+        if Refuel() == false then
+            Finish("Could not refuel; no fuel left in fuel chest", true)
+            return false
+        else
+            Resume(resumePoint, resumeRotation)
+        end
     end
+
+    if IsOutOfBounds() == true then
+        Finish("Out of bounds at " .. position.x .. ", " .. position.y .. ", " .. position.z, true)
+        return false
+    end
+
+    return true
+end
+
+function IsOutOfBounds()
+    return position.x > sizeX or
+           position.x < 0 or
+           position.y < -sizeY or
+           position.y > 0 or
+           position.z > (sizeZ + 1) or
+           position.z < 0
 end
 
 function IsLowOnFuel()
@@ -109,9 +142,10 @@ function IsLowOnFuel()
   
     local homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
 
-    if homeTravelCostPercent >= 0.90 then
+    if homeTravelCostPercent >= 0.80 then
         return true
     end
+
     return false
 end
 
@@ -136,11 +170,12 @@ function Resume(resumePoint, resumeRotation)
 end
 
 function Refuel()
+    io.write("Refueling..." .. "\n")
     if turtle.getFuelLevel() < 20000 then
         Rotate(3)
         turtle.suck()
         turtle.select(1)
-        turtle.refuel()
+        return turtle.refuel()
     end
 end
   
@@ -164,14 +199,17 @@ function Mine(startX, startY, startZ)
         for x = startX, sizeX do
             for z = startZ, sizeZ do
                 if x ~= startX and x % 2 == 0 then
-                    Move(2)
+                    if Move(2) == false then return end
                 else
-                    Move(0)
+                    if Move(0) == false then return end
                 end
+
+                if CheckStatus() == false then return end
             end
-            
+
             if x < sizeX then
-                Move(1)
+                if Move(1) == false then return end
+                if CheckStatus() == false then return end
             end
         end
 
@@ -180,8 +218,7 @@ function Mine(startX, startY, startZ)
         end
     end
 
-    Go(home)
-    Rotate(0)
+    Finish("Job completed successfully", false)
 end
 
 function SmartResume()
@@ -213,7 +250,12 @@ sizeZ = tonumber(io.read()) - 1
 io.write("How many layers deep? ")
 sizeY = tonumber(io.read())
 
-io.write("Refueling...")
+io.write("\n")
+
+position = vector.new(0, 0, 0)
+home = vector.new(0, 0, 0)
+rotation = 0
+
 Refuel()
 Info()
 Move(0)
