@@ -11,8 +11,14 @@
 ]]
 function Rotate(direction)
     while Rotation ~= direction do
-        Rotation = (Rotation + 1) % 4
-        turtle.turnRight()
+        if Rotation < direction then
+            Rotation = (Rotation + 1) % 4
+            turtle.turnRight()
+        else
+            Rotation = (Rotation - 1)
+            if Rotation < 0 then Rotation = 0 end
+            turtle.turnLeft()
+        end
     end
 end
 
