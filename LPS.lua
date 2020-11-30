@@ -44,6 +44,9 @@ function Move(direction)
     elseif direction == 4 then position.y = position.y + 1
     elseif direction == 5 then position.y = position.y - 1
     end
+
+    Info()
+    CheckStatus()
 end
 
 function Detect(direction)
@@ -151,25 +154,20 @@ function DumpShit()
 end
 
 -- MINING:
-function Mine()
-    for y = 1, sizeY do
-        --Move(0)
+function Mine(startX, startY, startZ)
+    for y = startY, sizeY do
+        if y > startY then
+            startX = 1
+            startZ = 1
+        end
 
-        -- local yDerp = y - 1
-        -- for i = 1, yDerp do
-        --     Move(5)
-        -- end
-
-        for x = 1, sizeX do
-            for z = 1, sizeZ do           
-                if x % 2 == 0  then
+        for x = startX, sizeX do
+            for z = startZ, sizeZ do
+                if x ~= startX and x % 2 == 0 then
                     Move(2)
                 else
                     Move(0)
                 end
-
-                Info()
-                CheckStatus()
             end
             
             if x < sizeX then
@@ -186,6 +184,25 @@ function Mine()
     Rotate(0)
 end
 
+function SmartResume()
+    local resumeX = 1
+    local resumeY = 1
+    local resumeZ = 1
+
+    while(Detect(5) == false) do
+        Move(5)
+        resumeY = resumeY + 1
+    end
+
+    while(Detect(1) == false) do
+        Move(1)
+        resumeX = resumeX + 1
+    end
+        
+    Rotate(0)
+    Mine(resumeX, resumeY, resumeZ)
+end
+
 -- STARTING POINT:
 io.write("Size X: ")
 sizeX = tonumber(io.read())
@@ -200,4 +217,4 @@ io.write("Refueling...")
 Refuel()
 Info()
 Move(0)
-Mine()
+SmartResume()
