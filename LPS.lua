@@ -1,6 +1,7 @@
 -- LOCAL POSITIONING SYSYEM
 
 position = vector.new(0, 0, 0)
+home = vector.new(0, 0, 0)
 rotation = 0
 
 --[[
@@ -53,12 +54,59 @@ function Detect(direction)
 end
 
 function Go(destination)
+    displacement = position - destination
+    isHome = (destination.x == home.x and destination.y == home.y and destination.z == home.z)
 
+    if(isHome == false) then
+        -- Displaced in +Z
+        while displacement.z > 0 do
+            Move(2) -- South
+            displacement.z = displacement.z - 1
+        end
+
+        -- Displaced in -Z
+        while displacement.z < 0 do
+            Move(0)  -- North
+            displacement.z = displacement.z + 1
+        end
+    end
+
+    -- Displaced in +Y
+    while displacement.y > 0 do
+        Move(5) -- Down
+        displacement.y = displacement.y - 1
+    end
+
+    -- Displaced in -Y
+    while displacement.y < 0 do
+        Move(4) -- Up
+        displacement.y = displacement.y + 1
+    end
+
+    -- Displaced in +X
+    while displacement.x > 0 do
+        Move(3) -- West
+        displacement.x = displacement.x - 1
+    end
+
+    -- Displaced in -X
+    while displacement.x < 0 do
+        Move(1) -- East
+        displacement.x = displacement.x + 1
+    end
+
+    if(isHome == true) then
+        -- Displaced in +Z
+        while displacement.z > 0 do
+            Move(2) -- South
+            displacement.z = displacement.z - 1
+        end
+
+        -- Displaced in -Z
+        while displacement.z < 0 do
+            Move(0)  -- North
+            displacement.z = displacement.z + 1
+        end
+    end
 end
 
-Move(0)
-Move(0)
-Move(0)
-Move(1)
-Move(1)
-Move(1)
