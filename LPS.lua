@@ -58,7 +58,6 @@ end
 
 function Go(destination)
     local displacement = Position - destination
-    io.write("Displacement: " .. displacement.x .. ", " .. displacement.y .. ", " .. displacement.z .. "\n")
     local destinationIsHome = (destination.x == Home.x and destination.y == Home.y and destination.z == Home.z)
 
     if destinationIsHome == true then
@@ -106,7 +105,6 @@ function CheckStatus()
     if IsLowOnFuel() == true or IsFullOfShit() == true then
         local resumePoint = vector.new(Position.x, Position.y, Position.z)
         local resumeRotation = Rotation
-        io.write("Resuming at position " .. resumePoint.x .. ", " .. resumePoint.y .. ", " .. resumePoint.z .. " and rotation " .. resumeRotation .. "\n")
         Go(Home)
         DumpShit()
         
@@ -157,11 +155,7 @@ function CheckRequiredFuel()
     if turtle.getFuelLevel() < fuelCost then
         io.write("Insufficent fuel. Proceed anyway? (y/n) ")
         local answer = io.read()
-        if answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes" then
-            return true
-        else
-            return false
-        end
+        return answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
     end
 
     return true
@@ -183,7 +177,6 @@ function IsFullOfShit()
 end
 
 function Resume(resumePoint, resumeRotation)
-    io.write("Resume point: " .. resumePoint.x .. ", " .. resumePoint.y .. ", " .. resumePoint.z .. "\n")
     Go(resumePoint)
     Rotate(resumeRotation)
 end
@@ -201,7 +194,7 @@ end
 function DumpShit()
     Rotate(2)
     local search = 0
-    for search = 16, 1, -1 do
+    for search = 15, 1, -1 do
         turtle.select(search)
         turtle.drop()
     end
@@ -209,6 +202,7 @@ end
 
 -- MINING:
 function Mine(startX, startY, startZ)
+    turtle.select(16)
     for y = startY, SizeY do
         if y > startY then
             startX = 1
@@ -216,7 +210,10 @@ function Mine(startX, startY, startZ)
         end
 
         for x = startX, SizeX do
-            for z = startZ, SizeZ do
+            PatchHoles()
+            for z = startZ, SizeZ do  
+                PatchHoles()
+                
                 if x ~= startX and x % 2 == 0 then
                     if Move(2) == false then return end
                 else
@@ -235,9 +232,26 @@ function Mine(startX, startY, startZ)
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
         end
+        PatchHoles()
     end
 
     Finish("Job completed successfully", false)
+end
+
+function PatchHoles()
+    if IsPatchingHoles == false then
+        return
+    end
+
+    if Detect(1) == false then
+        turtle.select(16)
+        turtle.place()
+    end
+
+    if Detect(5) == false then
+        turtle.select(16)
+        turtle.placeDown()
+    end
 end
 
 function SmartResume()
@@ -262,7 +276,16 @@ function SmartResume()
 end
 
 -- STARTING POINT:
-Info()
+term.clear()
+term.setCursorPos(1,1)
+io.write("             MINING PROGRAM            \n")
+io.write("=======================================\n")
+io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000 .. "\n")
+io.write("Requirements:\n")
+io.write("- Place fuel chest to left of turtle\n")
+io.write("- Place block chest behind turtle\n")
+io.write("- If patching holes, place block in \n  last slot")
+io.write("=======================================\n")
 
 io.write("How deep down? ")
 SizeY = tonumber(io.read())
@@ -273,15 +296,27 @@ SizeZ = tonumber(io.read()) - 1
 io.write("How wide? ")
 SizeX = tonumber(io.read())
 
+io.write("Resume previous job? (y/n)\n")
+local answer = io.read()
+IsResuming = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
+io.write("Patch holes? (Safer, but slower) (y/n)\n")
+answer = io.read()
+IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
 Position = vector.new(0, 0, 0)
 Home = vector.new(0, 0, 0)
 Rotation = 0
 
 -- Check fuel requirement and attempt to refuel if lower.
 if CheckRequiredFuel() == true then
-    Info()
     Move(0)
-    SmartResume()
+
+    if IsResuming == true then
+        SmartResume()
+    else
+        Mine(1, 1, 1)
+    end
 else
     Finish("Cancelled; Insufficent fuel", true)
 end
