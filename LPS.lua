@@ -177,7 +177,9 @@ function Mine()
             end
         end
 
-        Go(vector.new(home.x, y, home.z))
+        if y ~= sizeY then
+            Go(vector.new(home.x, -y, home.z + 1))
+        end
     end
 
     Go(home)
@@ -189,7 +191,7 @@ io.write("Size X: ")
 sizeX = tonumber(io.read())
 
 io.write("Size Z: ")
-sizeZ = tonumber(io.read())
+sizeZ = tonumber(io.read()) - 1
 
 io.write("How many layers deep? ")
 sizeY = tonumber(io.read())
@@ -197,4 +199,5 @@ sizeY = tonumber(io.read())
 io.write("Refueling...")
 Refuel()
 Info()
+Move(0)
 Mine()
