@@ -10,8 +10,8 @@
   Down - 5
 ]]
 function Rotate(direction)
-    while rotation ~= direction do
-        rotation = (rotation + 1) % 4
+    while Rotation ~= direction do
+        Rotation = (Rotation + 1) % 4
         turtle.turnRight()
     end
 end
@@ -38,12 +38,12 @@ function Move(direction)
     elseif direction == 5 then turtle.down()
     end
 
-    if direction == 0 then position.z = position.z + 1
-    elseif direction == 1 then position.x = position.x + 1
-    elseif direction == 2 then position.z = position.z - 1
-    elseif direction == 3 then position.x = position.x - 1
-    elseif direction == 4 then position.y = position.y + 1
-    elseif direction == 5 then position.y = position.y - 1
+    if direction == 0 then Position.z = Position.z + 1
+    elseif direction == 1 then Position.x = Position.x + 1
+    elseif direction == 2 then Position.z = Position.z - 1
+    elseif direction == 3 then Position.x = Position.x - 1
+    elseif direction == 4 then Position.y = Position.y + 1
+    elseif direction == 5 then Position.y = Position.y - 1
     end
 
     return true
@@ -57,8 +57,9 @@ function Detect(direction)
 end
 
 function Go(destination)
-    displacement = position - destination
-    destinationIsHome = (destination.x == home.x and destination.y == home.y and destination.z == home.z)
+    local displacement = Position - destination
+    io.write("Displacement: " .. displacement.x .. ", " .. displacement.y .. ", " .. displacement.z .. "\n")
+    local destinationIsHome = (destination.x == Home.x and destination.y == Home.y and destination.z == Home.z)
 
     if destinationIsHome == true then
         CorrectDisplacement(displacement.y, 4, 5)
@@ -92,25 +93,25 @@ end
 
 function Finish(reason, stop)
     if stop == false then
-        Go(home)
+        Go(Home)
     end
 
     Rotate(0)
-    io.write("Finished. Reason: " .. reason .. "\n")
+    io.write("Done: " .. reason .. "\n")
 end
 
 function CheckStatus()
     Info()
 
     if IsLowOnFuel() == true or IsFullOfShit() == true then
-        local resumePoint = position
-        local resumeRotation = rotation
+        local resumePoint = vector.new(Position.x, Position.y, Position.z)
+        local resumeRotation = Rotation
         io.write("Resuming at position " .. resumePoint.x .. ", " .. resumePoint.y .. ", " .. resumePoint.z .. " and rotation " .. resumeRotation .. "\n")
-        Go(home)
+        Go(Home)
         DumpShit()
         
-        if Refuel() == false then
-            Finish("Could not refuel; no fuel left in fuel chest", true)
+        if IsLowOnFuel() == true and Refuel() == false then
+            Finish("No fuel in fuel chest", true)
             return false
         else
             Resume(resumePoint, resumeRotation)
@@ -118,7 +119,7 @@ function CheckStatus()
     end
 
     if IsOutOfBounds() == true then
-        Finish("Out of bounds at " .. position.x .. ", " .. position.y .. ", " .. position.z, true)
+        Finish("Out of bounds at " .. Position.x .. ", " .. Position.y .. ", " .. Position.z, true)
         return false
     end
 
@@ -126,16 +127,16 @@ function CheckStatus()
 end
 
 function IsOutOfBounds()
-    return position.x > sizeX or
-           position.x < 0 or
-           position.y < -sizeY or
-           position.y > 0 or
-           position.z > (sizeZ + 1) or
-           position.z < 0
+    return Position.x > (SizeX - 1) or
+           Position.x < 0 or
+           Position.y < -SizeY or
+           Position.y > 0 or
+           Position.z > (SizeZ + 1) or
+           Position.z < 0
 end
 
 function IsLowOnFuel()
-    local displacement = position - home
+    local displacement = Position - Home
     local displacementTotal = math.abs(displacement.x) + 
                               math.abs(displacement.y) + 
                               math.abs(displacement.z)
@@ -147,6 +148,23 @@ function IsLowOnFuel()
     end
 
     return false
+end
+
+function CheckRequiredFuel()
+    local fuelCost = SizeX * SizeZ * SizeY * 1.5
+    io.write("Estimated fuel cost: " .. fuelCost .. "\n")
+
+    if turtle.getFuelLevel() < fuelCost then
+        io.write("Insufficent fuel. Proceed anyway? (y/n) ")
+        local answer = io.read()
+        if answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes" then
+            return true
+        else
+            return false
+        end
+    end
+
+    return true
 end
 
 function IsFullOfShit()
@@ -165,6 +183,7 @@ function IsFullOfShit()
 end
 
 function Resume(resumePoint, resumeRotation)
+    io.write("Resume point: " .. resumePoint.x .. ", " .. resumePoint.y .. ", " .. resumePoint.z .. "\n")
     Go(resumePoint)
     Rotate(resumeRotation)
 end
@@ -190,14 +209,14 @@ end
 
 -- MINING:
 function Mine(startX, startY, startZ)
-    for y = startY, sizeY do
+    for y = startY, SizeY do
         if y > startY then
             startX = 1
             startZ = 1
         end
 
-        for x = startX, sizeX do
-            for z = startZ, sizeZ do
+        for x = startX, SizeX do
+            for z = startZ, SizeZ do
                 if x ~= startX and x % 2 == 0 then
                     if Move(2) == false then return end
                 else
@@ -207,14 +226,14 @@ function Mine(startX, startY, startZ)
                 if CheckStatus() == false then return end
             end
 
-            if x < sizeX then
+            if x < SizeX then
                 if Move(1) == false then return end
                 if CheckStatus() == false then return end
             end
         end
 
-        if y ~= sizeY then
-            Go(vector.new(home.x, -y, home.z + 1))
+        if y ~= SizeY then
+            Go(vector.new(Home.x, -y, Home.z + 1))
         end
     end
 
@@ -227,12 +246,14 @@ function SmartResume()
     local resumeZ = 1
 
     while(Detect(5) == false) do
-        Move(5)
+        if Move(5) == false then return end
+        if CheckStatus() == false then return end
         resumeY = resumeY + 1
     end
 
     while(Detect(1) == false) do
-        Move(1)
+        if Move(1) == false then return end
+        if CheckStatus() == false then return end
         resumeX = resumeX + 1
     end
         
@@ -241,22 +262,26 @@ function SmartResume()
 end
 
 -- STARTING POINT:
-io.write("Size X: ")
-sizeX = tonumber(io.read())
-
-io.write("Size Z: ")
-sizeZ = tonumber(io.read()) - 1
-
-io.write("How many layers deep? ")
-sizeY = tonumber(io.read())
-
-io.write("\n")
-
-position = vector.new(0, 0, 0)
-home = vector.new(0, 0, 0)
-rotation = 0
-
-Refuel()
 Info()
-Move(0)
-SmartResume()
+
+io.write("How deep down? ")
+SizeY = tonumber(io.read())
+
+io.write("How far? ")
+SizeZ = tonumber(io.read()) - 1
+
+io.write("How wide? ")
+SizeX = tonumber(io.read())
+
+Position = vector.new(0, 0, 0)
+Home = vector.new(0, 0, 0)
+Rotation = 0
+
+-- Check fuel requirement and attempt to refuel if lower.
+if CheckRequiredFuel() == true then
+    Info()
+    Move(0)
+    SmartResume()
+else
+    Finish("Cancelled; Insufficent fuel", true)
+end
