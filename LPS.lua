@@ -110,3 +110,121 @@ function Go(destination)
     end
 end
 
+-- STATUS:
+function Info()
+    term.clear()
+    term.setCursorPos(1,1)
+    print("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000)
+end
+
+function CheckStatus()
+    if IsLowOnFuel() == true or IsFullOfShit() == true then
+        local resumePoint = position
+        local resumeRotation = rotation
+        Go(home)
+        Refuel()
+        DumpShit()
+        Resume(resumePoint, resumeRotation)
+    end
+end
+
+function IsLowOnFuel()
+    local displacement = position - home
+    local displacementTotal = math.abs(displacement.x) + 
+                              math.abs(displacement.y) + 
+                              math.abs(displacement.z)
+  
+    local homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
+
+    if homeTravelCostPercent >= 0.90 then
+        return true
+    end
+    return false
+end
+
+function IsFullOfShit()
+    local fullSlots = 0
+    for search = 16, 1, -1 do
+        if turtle.getItemCount(search) > 0 then
+            fullSlots = fullSlots + 1
+        end
+    end
+    
+    if fullSlots == 16 then
+        return true
+    end
+    
+    return false
+end
+
+function Resume(resumePoint, resumeRotation)
+    Go(resumePoint)
+    Rotate(resumeRotation)
+end
+
+function Refuel()
+    if turtle.getFuelLevel() < 20000 then
+        Rotate(3)
+        turtle.suck()
+        turtle.select(1)
+        turtle.refuel()
+    end
+end
+  
+function DumpShit()
+    Rotate(2)
+    local search = 0
+    for search = 16, 1, -1 do
+        turtle.select(search)
+        turtle.drop()
+    end
+end
+
+-- MINING:
+function Mine()
+    for y = 1, sizeY do
+        Move(0)
+
+        local yDerp = y - 1
+        for i = 1, yDerp do
+            Move(5)
+        end
+
+        for x = 1, sizeX do
+            for z = 1, sizeZ do           
+                if x % 2 == 0  then
+                    Move(2)
+                else
+                    Move(0)
+                end
+
+                Info()
+                CheckStatus()
+            end
+            
+            if x < sizeX then
+                Move(1)
+            end
+        end
+
+        Go(home)
+        Refuel()
+        DumpShit()
+    end
+    Rotate(0)
+end
+
+-- STARTING POINT:
+io.write("Size X: ")
+sizeX = tonumber(io.read())
+
+io.write("Size Z: ")
+sizeZ = tonumber(io.read()) - 1
+
+io.write("How many layers deep? ")
+sizeY = tonumber(io.read())
+
+io.write("Refueling...")
+Refuel()
+Info()
+Mine()
