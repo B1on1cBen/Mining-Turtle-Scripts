@@ -55,58 +55,28 @@ end
 
 function Go(destination)
     displacement = position - destination
-    isHome = (destination.x == home.x and destination.y == home.y and destination.z == home.z)
+    destinationIsHome = (destination.x == home.x and destination.y == home.y and destination.z == home.z)
 
-    if(isHome == false) then
-        -- Displaced in +Z
-        while displacement.z > 0 do
-            Move(2) -- South
-            displacement.z = displacement.z - 1
-        end
+    if destinationIsHome == true then
+        CorrectDisplacement(displacement.y, 4, 5)
+        CorrectDisplacement(displacement.x, 1, 3)
+        CorrectDisplacement(displacement.z, 0, 2)
+    else
+        CorrectDisplacement(displacement.z, 0, 2)
+        CorrectDisplacement(displacement.x, 1, 3)
+        CorrectDisplacement(displacement.y, 4, 5)
+    end
+end
 
-        -- Displaced in -Z
-        while displacement.z < 0 do
-            Move(0)  -- North
-            displacement.z = displacement.z + 1
-        end
+function CorrectDisplacement(displacement, positiveDirection, negativeDirection)
+    while displacement < 0 do
+        Move(positiveDirection)
+        displacement = displacement + 1
     end
 
-    -- Displaced in +Y
-    while displacement.y > 0 do
-        Move(5) -- Down
-        displacement.y = displacement.y - 1
-    end
-
-    -- Displaced in -Y
-    while displacement.y < 0 do
-        Move(4) -- Up
-        displacement.y = displacement.y + 1
-    end
-
-    -- Displaced in +X
-    while displacement.x > 0 do
-        Move(3) -- West
-        displacement.x = displacement.x - 1
-    end
-
-    -- Displaced in -X
-    while displacement.x < 0 do
-        Move(1) -- East
-        displacement.x = displacement.x + 1
-    end
-
-    if(isHome == true) then
-        -- Displaced in +Z
-        while displacement.z > 0 do
-            Move(2) -- South
-            displacement.z = displacement.z - 1
-        end
-
-        -- Displaced in -Z
-        while displacement.z < 0 do
-            Move(0)  -- North
-            displacement.z = displacement.z + 1
-        end
+    while displacement > 0 do
+        Move(negativeDirection)
+        displacement = displacement - 1
     end
 end
 
@@ -118,7 +88,7 @@ function Info()
 end
 
 function CheckStatus()
-    if IsLowOnFuel() == true or IsFullOfShit() == true then
+    if(IsLowOnFuel() == true or IsFullOfShit() == true)then
         local resumePoint = position
         local resumeRotation = rotation
         Go(home)
@@ -183,12 +153,12 @@ end
 -- MINING:
 function Mine()
     for y = 1, sizeY do
-        Move(0)
+        --Move(0)
 
-        local yDerp = y - 1
-        for i = 1, yDerp do
-            Move(5)
-        end
+        -- local yDerp = y - 1
+        -- for i = 1, yDerp do
+        --     Move(5)
+        -- end
 
         for x = 1, sizeX do
             for z = 1, sizeZ do           
@@ -207,10 +177,10 @@ function Mine()
             end
         end
 
-        Go(home)
-        Refuel()
-        DumpShit()
+        Go(vector.new(home.x, y, home.z))
     end
+
+    Go(home)
     Rotate(0)
 end
 
@@ -219,7 +189,7 @@ io.write("Size X: ")
 sizeX = tonumber(io.read())
 
 io.write("Size Z: ")
-sizeZ = tonumber(io.read()) - 1
+sizeZ = tonumber(io.read())
 
 io.write("How many layers deep? ")
 sizeY = tonumber(io.read())
