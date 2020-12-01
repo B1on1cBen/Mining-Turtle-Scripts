@@ -9,6 +9,12 @@
   Up - 4
   Down - 5
 ]]
+
+Position = vector.new(0, 0, 0)
+Home = vector.new(0, 0, 0)
+Rotation = 0
+FuelLimit = 100000
+
 function Rotate(direction)
     while Rotation ~= direction do
         if Rotation < direction then
@@ -93,7 +99,7 @@ end
 function Info()
     term.clear()
     term.setCursorPos(1,1)
-    io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000 .. "\n")
+    io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. FuelLimit .. "\n")
 end
 
 function Finish(reason, stop)
@@ -154,10 +160,7 @@ function IsLowOnFuel()
     return false
 end
 
-function CheckRequiredFuel()
-    local fuelCost = SizeX * SizeZ * SizeY * 1.5
-    io.write("Estimated fuel cost: " .. fuelCost .. "\n")
-
+function CheckRequiredFuel(fuelCost)
     if turtle.getFuelLevel() < fuelCost then
         io.write("Insufficent fuel. Proceed anyway? (y/n) ")
         local answer = io.read()
@@ -165,6 +168,11 @@ function CheckRequiredFuel()
     end
 
     return true
+end
+
+function EstimateRequiredChestSpace()
+    local space = ((SizeX * (SizeZ + 1) * SizeY / 64) * 1.5) / 42
+    io.write("Estimated large chests required: " .. math.ceil(space))
 end
 
 function IsFullOfShit()
@@ -285,13 +293,13 @@ end
 term.clear()
 term.setCursorPos(1,1)
 io.write("             MINING PROGRAM            \n")
-io.write("=======================================\n")
-io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. 20000 .. "\n")
+io.write("---------------------------------------\n")
+io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. FuelLimit .. "\n")
 io.write("Requirements:\n")
 io.write("- Place fuel chest to left of turtle\n")
 io.write("- Place block chest behind turtle\n")
 io.write("- If patching holes, place block in \n  last slot")
-io.write("=======================================\n")
+io.write("---------------------------------------\n")
 
 io.write("How deep down? ")
 SizeY = tonumber(io.read())
@@ -302,6 +310,12 @@ SizeZ = tonumber(io.read()) - 1
 io.write("How wide? ")
 SizeX = tonumber(io.read())
 
+io.write("---------------------------------------\n")
+EstimateRequiredChestSpace()
+local fuelCost = SizeX * SizeZ * SizeY * 1.5
+io.write("Estimated fuel cost: " .. fuelCost .. "\n")
+io.write("---------------------------------------\n")
+
 io.write("Resume previous job? (y/n)\n")
 local answer = io.read()
 IsResuming = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
@@ -310,14 +324,8 @@ io.write("Patch holes? (Safer, but slower) (y/n)\n")
 answer = io.read()
 IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
-Position = vector.new(0, 0, 0)
-Home = vector.new(0, 0, 0)
-Rotation = 0
-
--- Check fuel requirement and attempt to refuel if lower.
-if CheckRequiredFuel() == true then
+if CheckRequiredFuel(fuelCost) == true then
     Move(0)
-
     if IsResuming == true then
         SmartResume()
     else
