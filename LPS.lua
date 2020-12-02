@@ -71,7 +71,6 @@ function Move(direction)
     end
 
     if CheckPlaceLantern() == false then return false end
-    PatchHoles()
     if CheckStatus() == false then return false end
 
     return true
@@ -278,15 +277,18 @@ function Mine(startX, startY, startZ)
                 else
                     if Move(0) == false then return end
                 end
+                PatchHoles()
             end
 
             if x < SizeX then
                 if Move(1) == false then return end
+                PatchHoles()
             end
         end
 
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
+            PatchHoles()
         end
     end
 
@@ -334,7 +336,7 @@ function PatchHoles()
         turtle.placeDown()
     end
 
-    if IsFillingCeiling == true and Detect(4) == false then
+    if IsFillingCeiling == true and Position.y == 0 and Detect(4) == false then
         turtle.select(16)
         turtle.placeUp()
     end
@@ -458,6 +460,7 @@ answer = io.read()
 IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
 Move(0)
+PatchHoles()
 if IsResuming == true then
     ResumePreviousJob()
 else
