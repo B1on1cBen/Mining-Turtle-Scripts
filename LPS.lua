@@ -17,7 +17,7 @@ FuelLimit = 100000
 
 function Rotate(direction)
     while Rotation ~= direction do
-        if Rotation < direction then
+        if (Rotation == 3 and direction == 0) or Rotation < direction then
             Rotation = (Rotation + 1) % 4
             turtle.turnRight()
         else
@@ -208,7 +208,7 @@ end
 function DumpShit()
     Rotate(2)
     local search = 0
-    for search = 15, 1, -1 do
+    for search = 14, 1, -1 do
         turtle.select(search)
         turtle.drop()
     end
@@ -225,28 +225,31 @@ function Mine(startX, startY, startZ)
 
         for x = startX, SizeX do
             PatchHoles()
-            for z = startZ, SizeZ do  
-                PatchHoles()
-                
+            for z = startZ, SizeZ do
                 if x ~= startX and x % 2 == 0 then
                     if Move(2) == false then return end
                 else
                     if Move(0) == false then return end
                 end
-
+                PlaceLanterns()
+                PatchHoles()
                 if CheckStatus() == false then return end
             end
 
             if x < SizeX then
                 if Move(1) == false then return end
+                PlaceLanterns()
+                PatchHoles()
                 if CheckStatus() == false then return end
             end
         end
 
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
+            PlaceLanterns()
+            PatchHoles()
+            if CheckStatus() == false then return end
         end
-        PatchHoles()
     end
 
     Finish("Job completed successfully", false)
@@ -257,14 +260,64 @@ function PatchHoles()
         return
     end
 
+    if Position.z == (SizeZ + 1) then
+        if Detect(0) == false then
+            turtle.select(16)
+            turtle.place()
+        end
+    end
+
     if Detect(1) == false then
         turtle.select(16)
         turtle.place()
     end
 
+    if Position.z == 1 and Position.x > 0 then
+        if Detect(2) == false then
+            turtle.select(16)
+            turtle.place()
+        end
+    end
+
+    if Position.x == 0 then
+        if Detect(3) == false then
+            turtle.select(16)
+            turtle.place()
+        end
+    end
+
     if Detect(5) == false then
         turtle.select(16)
         turtle.placeDown()
+    end
+
+    if IsFillingCeiling == true and Detect(4) == false then
+        turtle.select(16)
+        turtle.placeUp()
+    end
+end
+
+function PlaceLanterns()
+    if Position.x % 7 ~= 0 then
+        return
+    end
+
+    if (Position.z - 1) % 6 ~= 0 then
+        return
+    end
+
+    if ((Position.z - 1) / 6) % 2 == 0 then
+        if (Position.x / 7) % 2 == 0 then
+            turtle.digDown()
+            turtle.select(15)
+            turtle.placeDown()
+        end
+    else
+        if (Position.x / 7) % 2 ~= 0 then
+            turtle.digDown()
+            turtle.select(15)
+            turtle.placeDown()
+        end
     end
 end
 
@@ -298,8 +351,13 @@ io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. FuelLimit .. "\n")
 io.write("Requirements:\n")
 io.write("- Place fuel chest to left of turtle\n")
 io.write("- Place block chest behind turtle\n")
+io.write("- Place Jack 'O Lanterns in slot 15 to \n  prevent mob spawning")
 io.write("- If patching holes, place block in \n  last slot")
 io.write("---------------------------------------\n")
+io.write("Press enter once requirements are met")
+io.read()
+term.clear()
+term.setCursorPos(1, 1)
 
 io.write("How deep down? ")
 SizeY = tonumber(io.read())
@@ -313,7 +371,7 @@ SizeX = tonumber(io.read())
 io.write("---------------------------------------\n")
 EstimateRequiredChestSpace()
 local fuelCost = SizeX * SizeZ * SizeY * 1.5
-io.write("Estimated fuel cost: " .. fuelCost .. "\n")
+io.write("Estimated fuel cost: " .. fuelCost .. "\n  out of " .. FuelLimit)
 io.write("---------------------------------------\n")
 
 io.write("Resume previous job? (y/n)\n")
@@ -324,8 +382,14 @@ io.write("Patch holes? (Safer, but slower) (y/n)\n")
 answer = io.read()
 IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
+io.write("Fill Ceiling? (y/n)\n")
+answer = io.read()
+IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
 if CheckRequiredFuel(fuelCost) == true then
     Move(0)
+    PlaceLanterns()
+    PatchHoles()
     if IsResuming == true then
         SmartResume()
     else

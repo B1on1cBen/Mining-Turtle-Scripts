@@ -258,7 +258,7 @@ local answer = io.read()
 IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
 IsFillingCeiling = false
-if answer == true then 
+if IsPatchingHoles == true then
     io.write("Fill Ceiling? (y/n)\n")
     IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 end
