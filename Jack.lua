@@ -151,20 +151,20 @@ function Mine(startX, startY, startZ)
                 else
                     if Move(0) == false then return end
                 end
-                PlaceLanterns()
+                CheckPlaceLantern()
                 PatchHoles()
             end
 
             if x < SizeX then
                 if Move(1) == false then return end
-                PlaceLanterns()
+                CheckPlaceLantern()
                 PatchHoles()
             end
         end
 
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
-            PlaceLanterns()
+            CheckPlaceLantern()
             PatchHoles()
         end
     end
@@ -214,7 +214,7 @@ function PatchHoles()
     end
 end
 
-function PlaceLanterns()
+function CheckPlaceLantern()
     if Position.x % 7 ~= 0 then
         return
     end
@@ -264,6 +264,6 @@ if IsPatchingHoles == true then
 end
 
 Move(0)
-PlaceLanterns()
+CheckPlaceLantern()
 PatchHoles()
 Mine(1, 1, 1)

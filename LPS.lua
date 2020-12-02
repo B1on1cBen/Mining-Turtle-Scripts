@@ -17,7 +17,7 @@ FuelLimit = 100000
 
 function Rotate(direction)
     while Rotation ~= direction do
-        if (Rotation == 3 and direction == 0) or Rotation < direction then
+        if (Rotation == 3 and direction == 0) or Rotation < direction and (Rotation == 0 and direction == 3) then
             Rotation = (Rotation + 1) % 4
             turtle.turnRight()
         else
@@ -261,7 +261,7 @@ function Mine(startX, startY, startZ)
 
         for x = startX, SizeX do
             for z = startZ, SizeZ do
-                if x ~= startX and x % 2 == 0 then
+                if (startX % 2 == 0) == (Position.x % 2 == 0) then
                     if Move(2) == false then return end
                 else
                     if Move(0) == false then return end
