@@ -15,9 +15,21 @@ Home = vector.new(0, 0, 0)
 Rotation = 0
 FuelLimit = 100000
 
-function Rotate(direction)
-    while Rotation ~= direction do
-        if (Rotation == 3 and direction == 0) or Rotation < direction and (Rotation == 0 and direction == 3) then
+function Rotate(wantedRotation)
+    while Rotation ~= wantedRotation do
+        if Rotation == 3 and wantedRotation == 0 then
+            Rotation = 0
+            turtle.turnRight()
+            return
+        end
+
+        if Rotation == 0 and wantedRotation == 3 then
+            Rotation = 3
+            turtle.turnLeft()
+            return
+        end
+
+        if Rotation < wantedRotation then
             Rotation = (Rotation + 1) % 4
             turtle.turnRight()
         else
