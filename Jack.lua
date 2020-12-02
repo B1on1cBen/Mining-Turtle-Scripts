@@ -129,7 +129,7 @@ end
 function DumpShit()
     Rotate(2)
     local search = 0
-    for search = 15, 1, -1 do
+    for search = 14, 1, -1 do
         turtle.select(search)
         turtle.drop()
     end
@@ -151,19 +151,22 @@ function Mine(startX, startY, startZ)
                 else
                     if Move(0) == false then return end
                 end
-                PatchHoles()          
+                PlaceLanterns()
+                PatchHoles()
             end
 
             if x < SizeX then
                 if Move(1) == false then return end
+                PlaceLanterns()
                 PatchHoles()
             end
         end
 
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
+            PlaceLanterns()
             PatchHoles()
-        end     
+        end
     end
 
     Finish("Job completed successfully", false)
@@ -211,6 +214,30 @@ function PatchHoles()
     end
 end
 
+function PlaceLanterns()
+    if Position.x % 7 ~= 0 then
+        return
+    end
+
+    if (Position.z - 1) % 6 ~= 0 then
+        return
+    end
+
+    if ((Position.z - 1) / 6) % 2 == 0 then
+        if (Position.x / 7) % 2 == 0 then
+            turtle.digDown()
+            turtle.select(15)
+            turtle.placeDown()
+        end
+    else
+        if (Position.x / 7) % 2 ~= 0 then
+            turtle.digDown()
+            turtle.select(15)
+            turtle.placeDown()
+        end
+    end
+end
+
 -- STARTING POINT:
 term.clear()
 term.setCursorPos(1,1)
@@ -226,9 +253,17 @@ SizeZ = tonumber(io.read()) - 1
 io.write("How wide? ")
 SizeX = tonumber(io.read())
 
-IsPatchingHoles = true
-IsFillingCeiling = true
+io.write("Patch holes? (Safer, but slower) (y/n)\n")
+local answer = io.read()
+IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
+IsFillingCeiling = false
+if answer == true then 
+    io.write("Fill Ceiling? (y/n)\n")
+    IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+end
 
 Move(0)
+PlaceLanterns()
 PatchHoles()
 Mine(1, 1, 1)
