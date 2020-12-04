@@ -138,25 +138,28 @@ end
 function CheckStatus()
     Info()
 
-    if GoingHome == false then
-        if IsLowOnFuel() == true or IsFullOfShit() == true then
-            local resumePoint = vector.new(Position.x, Position.y, Position.z)
-            local resumeRotation = Rotation
-            Go(Home)
-            DumpShit()
-            
-            if IsLowOnFuel() == true and Refuel() == false then
-                Finish("No fuel in fuel chest", true)
-                return false
-            else
-                Resume(resumePoint, resumeRotation)
-            end
-        end
-    end
-
     if IsOutOfBounds() == true then
         Finish("Out of bounds at " .. Position.x .. ", " .. Position.y .. ", " .. Position.z, true)
         return false
+    end
+
+    if GoingHome == true then
+        return true
+    end
+
+    if IsLowOnFuel() == true or IsFullOfShit() == true then
+        local resumePoint = vector.new(Position.x, Position.y, Position.z)
+        local resumeRotation = Rotation
+
+        Go(Home)
+        DumpShit()
+
+        if IsLowOnFuel() == true and Refuel() == false then
+            Finish("No fuel in fuel chest", true)
+            return false
+        else
+            Resume(resumePoint, resumeRotation)
+        end
     end
 
     return true
@@ -307,6 +310,11 @@ function Mine(startX, startY, startZ)
 end
 
 function PatchHoles()
+    if IsFillingCeiling == true and Position.y == 0 and Detect(4) == false then
+        turtle.select(16)
+        turtle.placeUp()
+    end
+
     if IsPatchingHoles == false then
         return true
     end
@@ -345,11 +353,6 @@ function PatchHoles()
     if Detect(5) == false then
         turtle.select(16)
         turtle.placeDown()
-    end
-
-    if IsFillingCeiling == true and Position.y == 0 and Detect(4) == false then
-        turtle.select(16)
-        turtle.placeUp()
     end
 
     return true
@@ -404,16 +407,14 @@ function ResumePreviousJob()
 
     while(Detect(5) == false) do
         if Move(5) == false then return end
-        if CheckStatus() == false then return end
         resumeY = resumeY + 1
     end
 
     while(Detect(1) == false) do
         if Move(1) == false then return end
-        if CheckStatus() == false then return end
         resumeX = resumeX + 1
     end
-        
+
     Rotate(0)
     io.write("Resume pos: " .. resumeX .. ", " .. resumeY .. ", " .. resumeZ)
     Mine(resumeX, resumeY, resumeZ)
