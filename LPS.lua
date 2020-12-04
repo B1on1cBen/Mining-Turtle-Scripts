@@ -14,10 +14,23 @@ Position = vector.new(0, 0, 0)
 Home = vector.new(0, 0, 0)
 Rotation = 0
 FuelLimit = 100000
+GoingHome = false
 
-function Rotate(direction)
-    while Rotation ~= direction do
-        if Rotation < direction then
+function Rotate(wantedRotation)
+    while Rotation ~= wantedRotation do
+        if Rotation == 3 and wantedRotation == 0 then
+            Rotation = 0
+            turtle.turnRight()
+            return
+        end
+
+        if Rotation == 0 and wantedRotation == 3 then
+            Rotation = 3
+            turtle.turnLeft()
+            return
+        end
+
+        if Rotation < wantedRotation then
             Rotation = (Rotation + 1) % 4
             turtle.turnRight()
         else
@@ -58,6 +71,9 @@ function Move(direction)
     elseif direction == 5 then Position.y = Position.y - 1
     end
 
+    if CheckPlaceLantern() == false then return false end
+    if CheckStatus() == false then return false end
+
     return true
 end
 
@@ -72,6 +88,10 @@ function Go(destination)
     local displacement = Position - destination
     local destinationIsHome = (destination.x == Home.x and destination.y == Home.y and destination.z == Home.z)
 
+    if(destinationIsHome) then
+        GoingHome = true
+    end
+
     if destinationIsHome == true then
         CorrectDisplacement(displacement.y, 4, 5)
         CorrectDisplacement(displacement.x, 1, 3)
@@ -80,6 +100,10 @@ function Go(destination)
         CorrectDisplacement(displacement.z, 0, 2)
         CorrectDisplacement(displacement.x, 1, 3)
         CorrectDisplacement(displacement.y, 4, 5)
+    end
+
+    if(destinationIsHome) then
+        GoingHome = false
     end
 end
 
@@ -114,17 +138,19 @@ end
 function CheckStatus()
     Info()
 
-    if IsLowOnFuel() == true or IsFullOfShit() == true then
-        local resumePoint = vector.new(Position.x, Position.y, Position.z)
-        local resumeRotation = Rotation
-        Go(Home)
-        DumpShit()
-        
-        if IsLowOnFuel() == true and Refuel() == false then
-            Finish("No fuel in fuel chest", true)
-            return false
-        else
-            Resume(resumePoint, resumeRotation)
+    if GoingHome == false then
+        if IsLowOnFuel() == true or IsFullOfShit() == true then
+            local resumePoint = vector.new(Position.x, Position.y, Position.z)
+            local resumeRotation = Rotation
+            Go(Home)
+            DumpShit()
+            
+            if IsLowOnFuel() == true and Refuel() == false then
+                Finish("No fuel in fuel chest", true)
+                return false
+            else
+                Resume(resumePoint, resumeRotation)
+            end
         end
     end
 
@@ -175,24 +201,57 @@ function EstimateRequiredChestSpace()
     io.write("Estimated large chests required: " .. math.ceil(space))
 end
 
+function CheckStartRequirements()
+    term.clear()
+    term.setCursorPos(1,1)
+    io.write("             MINING PROGRAM            \n")
+    io.write("---------------------------------------\n")
+    io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. FuelLimit .. "\n")
+    io.write("How to use:\n")
+    io.write("- Place fuel chest to left of turtle\n")
+    io.write("- Place block chest behind turtle\n")
+    io.write("- Place Jack O' Lanterns in slot 15 to \n  prevent mob spawning\n")
+    io.write("- If patching holes, place block in \n  last slot (16)\n")
+    io.write("---------------------------------------\n")
+    io.write("Press enter once requirements are met")
+
+    io.read()
+
+    local requirementsMet = turtle.getItemCount(15) > 0 and
+                      turtle.getItemCount(16) > 0
+                        
+    if requirementsMet then
+        return true
+    end
+
+    term.clear()
+    term.setCursorPos(1, 1)
+    if turtle.getItemCount(15) == 0 then
+        io.write("No Jack O' Lanterns in slot 15.\n")
+    end
+
+    if turtle.getItemCount(16) == 0 then
+        io.write("No blocks in slot 15.\n")
+    end
+
+    io.write("Continue? (y/n)")
+    local answer = io.read()
+    return answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+end
+
 function IsFullOfShit()
     local fullSlots = 0
-    for search = 16, 1, -1 do
+    for search = 14, 1, -1 do
         if turtle.getItemCount(search) > 0 then
             fullSlots = fullSlots + 1
         end
     end
     
-    if fullSlots == 16 then
+    if fullSlots == 14 then
         return true
     end
     
     return false
-end
-
-function Resume(resumePoint, resumeRotation)
-    Go(resumePoint)
-    Rotate(resumeRotation)
 end
 
 function Refuel()
@@ -207,8 +266,7 @@ end
   
 function DumpShit()
     Rotate(2)
-    local search = 0
-    for search = 15, 1, -1 do
+    for search = 14, 1, -1 do
         turtle.select(search)
         turtle.drop()
     end
@@ -224,29 +282,25 @@ function Mine(startX, startY, startZ)
         end
 
         for x = startX, SizeX do
-            PatchHoles()
-            for z = startZ, SizeZ do  
-                PatchHoles()
-                
-                if x ~= startX and x % 2 == 0 then
+            for z = startZ, SizeZ do
+                if (startX % 2 == 0) == (Position.x % 2 == 0) then
                     if Move(2) == false then return end
                 else
                     if Move(0) == false then return end
                 end
-
-                if CheckStatus() == false then return end
+                PatchHoles()
             end
 
             if x < SizeX then
                 if Move(1) == false then return end
-                if CheckStatus() == false then return end
+                PatchHoles()
             end
         end
 
         if y ~= SizeY then
             Go(vector.new(Home.x, -y, Home.z + 1))
+            PatchHoles()
         end
-        PatchHoles()
     end
 
     Finish("Job completed successfully", false)
@@ -254,7 +308,19 @@ end
 
 function PatchHoles()
     if IsPatchingHoles == false then
-        return
+        return true
+    end
+
+    if turtle.getItemCount(16) == 0 then
+        Finish("Out of filler blocks", false)
+        return false
+    end
+
+    if Position.z == (SizeZ + 1) then
+        if Detect(0) == false then
+            turtle.select(16)
+            turtle.place()
+        end
     end
 
     if Detect(1) == false then
@@ -262,13 +328,76 @@ function PatchHoles()
         turtle.place()
     end
 
+    if Position.z == 1 and Position.x > 0 then
+        if Detect(2) == false then
+            turtle.select(16)
+            turtle.place()
+        end
+    end
+
+    if Position.x == 0 then
+        if Detect(3) == false then
+            turtle.select(16)
+            turtle.place()
+        end
+    end
+
     if Detect(5) == false then
         turtle.select(16)
         turtle.placeDown()
     end
+
+    if IsFillingCeiling == true and Position.y == 0 and Detect(4) == false then
+        turtle.select(16)
+        turtle.placeUp()
+    end
+
+    return true
 end
 
-function SmartResume()
+function CheckPlaceLantern()
+    if(IsPlacingLights == false) then
+        return 
+    end
+
+    if Position.x % 7 ~= 0 then
+        return
+    end
+
+    if (Position.z - 1) % 6 ~= 0 then
+        return
+    end
+
+    if ((Position.z - 1) / 6) % 2 == 0 then
+        if (Position.x / 7) % 2 == 0 then
+            return PlaceLantern()
+        end
+    else
+        if (Position.x / 7) % 2 ~= 0 then
+            return PlaceLantern()
+        end
+    end
+
+    return true
+end
+
+function PlaceLantern()
+    turtle.digDown()
+    turtle.select(15)
+    if turtle.getItemCount(15) == 0 then
+        Finish("Out of Jack O' Lanterns", false)
+        return false
+    end
+    turtle.placeDown()
+    return true
+end
+
+function Resume(resumePoint, resumeRotation)
+    Go(resumePoint)
+    Rotate(resumeRotation)
+end
+
+function ResumePreviousJob()
     local resumeX = 1
     local resumeY = 1
     local resumeZ = 1
@@ -286,20 +415,17 @@ function SmartResume()
     end
         
     Rotate(0)
+    io.write("Resume pos: " .. resumeX .. ", " .. resumeY .. ", " .. resumeZ)
     Mine(resumeX, resumeY, resumeZ)
 end
 
 -- STARTING POINT:
+while CheckStartRequirements() == false do
+    CheckStartRequirements()
+end
+
 term.clear()
-term.setCursorPos(1,1)
-io.write("             MINING PROGRAM            \n")
-io.write("---------------------------------------\n")
-io.write("Fuel: " .. turtle.getFuelLevel() .. "/" .. FuelLimit .. "\n")
-io.write("Requirements:\n")
-io.write("- Place fuel chest to left of turtle\n")
-io.write("- Place block chest behind turtle\n")
-io.write("- If patching holes, place block in \n  last slot")
-io.write("---------------------------------------\n")
+term.setCursorPos(1, 1)
 
 io.write("How deep down? ")
 SizeY = tonumber(io.read())
@@ -310,10 +436,22 @@ SizeZ = tonumber(io.read()) - 1
 io.write("How wide? ")
 SizeX = tonumber(io.read())
 
-io.write("---------------------------------------\n")
+term.clear()
+term.setCursorPos(1, 1)
+io.write(SizeX .. " x " .. SizeY .. " x " .. (SizeZ + 1) .. "\n")
 EstimateRequiredChestSpace()
 local fuelCost = SizeX * SizeZ * SizeY * 1.5
-io.write("Estimated fuel cost: " .. fuelCost .. "\n")
+io.write("Estimated fuel cost: " .. fuelCost .. "\n  out of " .. FuelLimit)
+
+while CheckRequiredFuel(fuelCost) == false do
+    term.clear()
+    term.setCursorPos(1, 1)
+    io.write(SizeX .. " x " .. SizeY .. " x " .. SizeZ .. "\n")
+    EstimateRequiredChestSpace()
+    fuelCost = SizeX * SizeZ * SizeY * 1.5
+    io.write("Estimated fuel cost: " .. fuelCost .. " out of " .. FuelLimit)
+end
+
 io.write("---------------------------------------\n")
 
 io.write("Resume previous job? (y/n)\n")
@@ -324,13 +462,18 @@ io.write("Patch holes? (Safer, but slower) (y/n)\n")
 answer = io.read()
 IsPatchingHoles = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
-if CheckRequiredFuel(fuelCost) == true then
-    Move(0)
-    if IsResuming == true then
-        SmartResume()
-    else
-        Mine(1, 1, 1)
-    end
+io.write("Place lights? (y/n)\n")
+answer = io.read()
+IsPlacingLights = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
+io.write("Fill Ceiling? (y/n)\n")
+answer = io.read()
+IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
+
+Move(0)
+PatchHoles()
+if IsResuming == true then
+    ResumePreviousJob()
 else
-    Finish("Cancelled; Insufficent fuel", true)
+    Mine(1, 1, 1)
 end
