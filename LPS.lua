@@ -331,7 +331,7 @@ function PatchHoles()
         end
     end
 
-    if Detect(1) == false then
+    if Detect(1) == false and IsResuming == false then
         turtle.select(16)
         turtle.place()
     end
@@ -417,6 +417,7 @@ function ResumePreviousJob()
     end
 
     Rotate(0)
+    IsResuming = false
     io.write("Resume pos: " .. resumeX .. ", " .. resumeY .. ", " .. resumeZ)
     Mine(resumeX, resumeY, resumeZ)
 end
