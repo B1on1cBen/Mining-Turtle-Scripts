@@ -14,6 +14,7 @@ Position = vector.new(0, 0, 0)
 Home = vector.new(0, 0, 0)
 Rotation = 0
 FuelLimit = 100000
+GoingHome = false
 
 function Rotate(wantedRotation)
     while Rotation ~= wantedRotation do
@@ -87,6 +88,10 @@ function Go(destination)
     local displacement = Position - destination
     local destinationIsHome = (destination.x == Home.x and destination.y == Home.y and destination.z == Home.z)
 
+    if(destinationIsHome) then
+        GoingHome = true
+    end
+
     if destinationIsHome == true then
         CorrectDisplacement(displacement.y, 4, 5)
         CorrectDisplacement(displacement.x, 1, 3)
@@ -95,6 +100,10 @@ function Go(destination)
         CorrectDisplacement(displacement.z, 0, 2)
         CorrectDisplacement(displacement.x, 1, 3)
         CorrectDisplacement(displacement.y, 4, 5)
+    end
+
+    if(destinationIsHome) then
+        GoingHome = false
     end
 end
 
@@ -129,17 +138,19 @@ end
 function CheckStatus()
     Info()
 
-    if IsLowOnFuel() == true or IsFullOfShit() == true then
-        local resumePoint = vector.new(Position.x, Position.y, Position.z)
-        local resumeRotation = Rotation
-        Go(Home)
-        DumpShit()
-        
-        if IsLowOnFuel() == true and Refuel() == false then
-            Finish("No fuel in fuel chest", true)
-            return false
-        else
-            Resume(resumePoint, resumeRotation)
+    if GoingHome == false then
+        if IsLowOnFuel() == true or IsFullOfShit() == true then
+            local resumePoint = vector.new(Position.x, Position.y, Position.z)
+            local resumeRotation = Rotation
+            Go(Home)
+            DumpShit()
+            
+            if IsLowOnFuel() == true and Refuel() == false then
+                Finish("No fuel in fuel chest", true)
+                return false
+            else
+                Resume(resumePoint, resumeRotation)
+            end
         end
     end
 
