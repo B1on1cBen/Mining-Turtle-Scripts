@@ -158,6 +158,7 @@ function CheckStatus()
             Finish("No fuel in fuel chest", true)
             return false
         else
+            turtle.select(15)
             Resume(resumePoint, resumeRotation)
         end
     end
@@ -277,7 +278,6 @@ end
 
 -- MINING:
 function Mine(startX, startY, startZ)
-    turtle.select(16)
     for y = startY, SizeY do
         if y > startY then
             startX = 1
@@ -355,6 +355,7 @@ function PatchHoles()
         turtle.placeDown()
     end
 
+    turtle.select(15)
     return true
 end
 
@@ -471,6 +472,7 @@ io.write("Fill Ceiling? (y/n)\n")
 answer = io.read()
 IsFillingCeiling = answer == "y" or answer == "Y" or answer == "yes" or answer == "Yes"
 
+turtle.select(15)
 Move(0)
 PatchHoles()
 if IsResuming == true then
