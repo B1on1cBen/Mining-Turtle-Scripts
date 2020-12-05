@@ -364,16 +364,16 @@ function CheckPlaceLantern()
         return
     end
 
-    if (Position.z - 1) == SizeZ then
-        if SizeZ % 5 ~= 0 then
+    if PlaceLanternsAlongFarZ == true then
+        if (Position.z - 1) == SizeZ then
             if Position.x % 6 == 0 and (Position.x / 6) % 2 ~= 0 then
                 return PlaceLantern()
             end
         end
     end
 
-    if (Position.x) == (SizeX - 1) then
-        if (SizeX - 1) % 6 ~= 0 then
+    if PlaceLanternsAlongFarX == true then
+        if (Position.x) == (SizeX - 1) then
             if (Position.z - 1) % 5 == 0 and ((Position.z - 1) / 5) % 2 == 0 then
                 return PlaceLantern()
             end
@@ -454,6 +454,9 @@ SizeZ = tonumber(io.read()) - 1
 
 io.write("How wide? ")
 SizeX = tonumber(io.read())
+
+PlaceLanternsAlongFarZ = SizeZ % 5 ~= 0
+PlaceLanternsAlongFarX = (SizeX - 1) % 6 ~= 0
 
 term.clear()
 term.setCursorPos(1, 1)
