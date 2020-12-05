@@ -177,10 +177,10 @@ end
 
 function IsLowOnFuel()
     local displacement = Position - Home
-    local displacementTotal = math.abs(displacement.x) + 
-                              math.abs(displacement.y) + 
+    local displacementTotal = math.abs(displacement.x) +
+                              math.abs(displacement.y) +
                               math.abs(displacement.z)
-  
+
     local homeTravelCostPercent = displacementTotal / turtle.getFuelLevel()
 
     if homeTravelCostPercent >= 0.80 then
@@ -223,7 +223,7 @@ function CheckStartRequirements()
 
     local requirementsMet = turtle.getItemCount(15) > 0 and
                       turtle.getItemCount(16) > 0
-                        
+   
     if requirementsMet then
         return true
     end
@@ -250,11 +250,11 @@ function IsFullOfShit()
             fullSlots = fullSlots + 1
         end
     end
-    
+
     if fullSlots == 14 then
         return true
     end
-    
+
     return false
 end
 
@@ -361,7 +361,23 @@ end
 
 function CheckPlaceLantern()
     if(IsPlacingLights == false) then
-        return 
+        return
+    end
+
+    if (Position.z - 1) == SizeZ then
+        if SizeZ % 5 ~= 0 then
+            if Position.x % 6 == 0 and (Position.x / 6) % 2 ~= 0 then
+                return PlaceLantern()
+            end
+        end
+    end
+
+    if (Position.x) == (SizeX - 1) then
+        if (SizeX - 1) % 6 ~= 0 then
+            if (Position.z - 1) % 5 == 0 and ((Position.z - 1) / 5) % 2 == 0 then
+                return PlaceLantern()
+            end
+        end
     end
 
     if Position.x % 6 ~= 0 then
