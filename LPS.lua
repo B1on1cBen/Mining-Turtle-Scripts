@@ -364,20 +364,20 @@ function CheckPlaceLantern()
         return 
     end
 
-    if Position.x % 7 ~= 0 then
+    if Position.x % 6 ~= 0 then
         return
     end
 
-    if (Position.z - 1) % 6 ~= 0 then
+    if (Position.z - 1) % 5 ~= 0 then
         return
     end
 
-    if ((Position.z - 1) / 6) % 2 == 0 then
-        if (Position.x / 7) % 2 == 0 then
+    if ((Position.z - 1) / 5) % 2 == 0 then
+        if (Position.x / 6) % 2 == 0 then
             return PlaceLantern()
         end
     else
-        if (Position.x / 7) % 2 ~= 0 then
+        if (Position.x / 6) % 2 ~= 0 then
             return PlaceLantern()
         end
     end
