@@ -248,6 +248,8 @@ SizeX = tonumber(io.read())
 io.write("How far down is lava from home position? ")
 GoDownSize = tonumber(io.read())
 
+SizeY = SizeY + GoDownSize
+
 term.clear()
 term.setCursorPos(1, 1)
 

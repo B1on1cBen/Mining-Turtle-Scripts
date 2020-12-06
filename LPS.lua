@@ -426,8 +426,12 @@ function PlaceLantern()
 end
 
 function Resume(resumePoint, resumeRotation)
+    IsResuming = true
     Go(resumePoint)
+    IsResuming = false
     Rotate(resumeRotation)
+
+    return true;
 end
 
 function ResumePreviousJob()
