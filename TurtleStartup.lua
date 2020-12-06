@@ -21,11 +21,29 @@ shell.setAlias( "mv", "move" )
 shell.setAlias( "rm", "delete" )
 shell.setAlias( "preview", "edit" )
 
-io.write("Hello! I am " .. os.getComputerLabel() .. "!\n")
-io.write("My current fuel level is " .. turtle.getFuelLevel() .. "\n")
-io.write("Here are my installed programs:\n")
-textutils.tabulate(shell.programs(true))
+function WriteColoredText(text, color)
+	term.setTextColor(color)
+	io.write(text)
+	term.setTextColor(colors.white)
+end
 
+function ListProgram(name, description)
+	io.write(" ")
+	WriteColoredText(name, colors.yellow)
+	io.write(" - " .. description .. "\n")
+end
+
+fs.delete("slurp")
+fs.delete("mine")
+
+io.write("Hello! I am " .. os.getComputerLabel() .. "!\n")
+io.write("My current fuel level is ")
+WriteColoredText(turtle.getFuelLevel() .. "\n", colors.yellow)
+io.write("\n")
+io.write("Here are my installed programs:\n")
+ListProgram("mine", "mine an area and return items")
+ListProgram("slurp", "refuel from lava lake")
+io.write("\n")
 io.write("How may I be of service?\n")
 
 if fs.exists( "/rom/autorun" ) and fs.isDir( "/rom/autorun" ) then
