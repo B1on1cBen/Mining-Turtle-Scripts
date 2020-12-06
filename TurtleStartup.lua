@@ -33,8 +33,18 @@ function ListProgram(name, description)
 	io.write(" - " .. description .. "\n")
 end
 
-fs.delete("slurp")
-fs.delete("mine")
+function UpdatePrograms()
+	fs.delete("slurp")
+	fs.delete("mine")
+	
+	shell.run("pastebin", "get", "LY9hpKka", "mine")
+	shell.run("pastebin", "get", "NueyacPA", "slurp")
+	
+	term.clear()
+	term.setCursorPos(1, 1)
+end
+
+UpdatePrograms()
 
 io.write("Hello! I am " .. os.getComputerLabel() .. "!\n")
 io.write("My current fuel level is ")
