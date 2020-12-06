@@ -129,6 +129,7 @@ end
 function Finish(reason, stop)
     if stop == false then
         Go(Home)
+        DumpShit()
     end
 
     Rotate(0)
@@ -310,6 +311,10 @@ function Mine(startX, startY, startZ)
 end
 
 function PatchHoles()
+    if IsResuming == true then
+        return true
+    end
+
     if IsFillingCeiling == true and Position.y == 0 and Detect(4) == false then
         turtle.select(16)
         turtle.placeUp()
@@ -360,7 +365,7 @@ function PatchHoles()
 end
 
 function CheckPlaceLantern()
-    if(IsPlacingLights == false) then
+    if(IsPlacingLights == false or IsResuming == true or GoingHome == true) then
         return
     end
 
@@ -403,6 +408,14 @@ end
 
 function PlaceLantern()
     turtle.digDown()
+    turtle.down()
+    if turtle.getItemCount(16) == 0 then
+        Finish("Out of filler blocks", false)
+        return false
+    end
+    turtle.select(16)
+    turtle.placeDown()
+    turtle.up()
     turtle.select(15)
     if turtle.getItemCount(15) == 0 then
         Finish("Out of Jack O' Lanterns", false)
@@ -422,12 +435,12 @@ function ResumePreviousJob()
     local resumeY = 1
     local resumeZ = 1
 
-    while(Detect(5) == false) do
+    while(Detect(5) == false and Position.y >= -SizeY) do
         if Move(5) == false then return end
         resumeY = resumeY + 1
     end
 
-    while(Detect(1) == false) do
+    while(Detect(1) == false and Position.x < SizeX) do
         if Move(1) == false then return end
         resumeX = resumeX + 1
     end
