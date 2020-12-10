@@ -148,19 +148,16 @@ function CheckStatus()
         return true
     end
 
-    if IsLowOnFuel() == true or IsFullOfShit() == true then
-        local resumePoint = vector.new(Position.x, Position.y, Position.z)
-        local resumeRotation = Rotation
-
-        Go(Home)
+    if IsFullOfShit() == true then
         DumpShit()
+    end
 
-        if IsLowOnFuel() == true and Refuel() == false then
-            Finish("No fuel in fuel chest", true)
+    if IsLowOnFuel() == true then
+        if Refuel() == false then
+            Finish("No fuel", true)
             return false
         else
             turtle.select(15)
-            Resume(resumePoint, resumeRotation)
         end
     end
 
@@ -246,13 +243,13 @@ end
 
 function IsFullOfShit()
     local fullSlots = 0
-    for search = 14, 1, -1 do
+    for search = 13, 1, -1 do
         if turtle.getItemCount(search) > 0 then
             fullSlots = fullSlots + 1
         end
     end
 
-    if fullSlots == 14 then
+    if fullSlots == 13 then
         return true
     end
 
@@ -260,21 +257,21 @@ function IsFullOfShit()
 end
 
 function Refuel()
-    io.write("Refueling..." .. "\n")
-    if turtle.getFuelLevel() < 20000 then
-        Rotate(3)
-        turtle.suck()
-        turtle.select(1)
-        return turtle.refuel()
-    end
+    shell.run("enderRefuel")
 end
   
 function DumpShit()
-    Rotate(2)
-    for search = 14, 1, -1 do
+    turtle.select(14)
+    turtle.digUp()
+    turtle.placeUp()
+
+    for search = 13, 1, -1 do
         turtle.select(search)
-        turtle.drop()
+        turtle.dropUp()
     end
+
+    turtle.select(14)
+    turtle.digUp()
 end
 
 -- MINING:
