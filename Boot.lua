@@ -1,7 +1,7 @@
 function WriteColoredText(text, color)
-	term.setTextColor(color)
+	--term.setTextColor(color)
 	io.write(text)
-	term.setTextColor(colors.white)
+	--term.setTextColor(colors.white)
 end
 
 function ListProgram(name, description)
